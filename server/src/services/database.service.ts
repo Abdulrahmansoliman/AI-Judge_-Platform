@@ -87,3 +87,5 @@ export function toSnakeCase<T>(obj: any): T {
   
   return obj;
 }
+
+export { DatabaseService };
