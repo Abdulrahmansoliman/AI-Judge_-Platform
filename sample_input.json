@@ -1,0 +1,79 @@
+[
+  {
+    "id": "sub_1",
+    "queueId": "queue_1",
+    "labelingTaskId": "task_1",
+    "createdAt": 1690000000000,
+    "questions": [
+      {
+        "rev": 1,
+        "data": {
+          "id": "q_template_1",
+          "questionType": "single_choice_with_reasoning",
+          "questionText": "Is the sky blue?"
+        }
+      }
+    ],
+    "answers": {
+      "q_template_1": {
+        "choice": "yes",
+        "reasoning": "Observed on a clear day."
+      }
+    }
+  },
+  {
+    "id": "sub_2",
+    "queueId": "queue_1",
+    "labelingTaskId": "task_1",
+    "createdAt": 1690000100000,
+    "questions": [
+      {
+        "rev": 1,
+        "data": {
+          "id": "q_template_1",
+          "questionType": "single_choice_with_reasoning",
+          "questionText": "Is the sky blue?"
+        }
+      },
+      {
+        "rev": 1,
+        "data": {
+          "id": "q_template_2",
+          "questionType": "multiple_choice",
+          "questionText": "What colors can the sky be?"
+        }
+      }
+    ],
+    "answers": {
+      "q_template_1": {
+        "choice": "no",
+        "reasoning": "It was cloudy and gray."
+      },
+      "q_template_2": {
+        "choice": "blue, gray, orange, pink",
+        "reasoning": "The sky changes color throughout the day and in different weather conditions."
+      }
+    }
+  },
+  {
+    "id": "sub_3",
+    "queueId": "queue_2",
+    "labelingTaskId": "task_2",
+    "createdAt": 1690000200000,
+    "questions": [
+      {
+        "rev": 1,
+        "data": {
+          "id": "q_template_3",
+          "questionType": "free_form",
+          "questionText": "Describe the process of photosynthesis."
+        }
+      }
+    ],
+    "answers": {
+      "q_template_3": {
+        "reasoning": "Photosynthesis is the process by which plants convert sunlight, water, and carbon dioxide into glucose and oxygen. It occurs in the chloroplasts using chlorophyll."
+      }
+    }
+  }
+]
