@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { DatabaseService } from '../services/database.service';
+import { DatabaseService, toCamelCase, toSnakeCase } from '../services/database.service';
 import { JudgeRow, Judge, CreateJudgeInput, UpdateJudgeInput } from '../models/judge.model';
 
 export class JudgeRepository {
@@ -12,25 +12,25 @@ export class JudgeRepository {
   findById(id: number): Judge | null {
     const stmt = this.db.prepare('SELECT * FROM judges WHERE id = ?');
     const row = stmt.get(id) as JudgeRow | undefined;
-    return row ? DatabaseService.toCamelCase(row) : null;
+    return row ? toCamelCase(row) : null;
   }
 
   findAll(): Judge[] {
     const stmt = this.db.prepare('SELECT * FROM judges ORDER BY created_at DESC');
     const rows = stmt.all() as JudgeRow[];
-    return rows.map(row => DatabaseService.toCamelCase(row));
+    return rows.map(row => toCamelCase(row));
   }
 
   findActive(): Judge[] {
     const stmt = this.db.prepare('SELECT * FROM judges WHERE active = 1 ORDER BY created_at DESC');
     const rows = stmt.all() as JudgeRow[];
-    return rows.map(row => DatabaseService.toCamelCase(row));
+    return rows.map(row => toCamelCase(row));
   }
 
   findByName(name: string): Judge | null {
     const stmt = this.db.prepare('SELECT * FROM judges WHERE name = ?');
     const row = stmt.get(name) as JudgeRow | undefined;
-    return row ? DatabaseService.toCamelCase(row) : null;
+    return row ? toCamelCase(row) : null;
   }
 
   create(input: CreateJudgeInput): Judge {
@@ -46,7 +46,7 @@ export class JudgeRepository {
       INSERT INTO judges (name, system_prompt, model, active, created_at, updated_at)
       VALUES (@name, @systemPrompt, @model, @active, @createdAt, @updatedAt)
     `);
-    const data = DatabaseService.toSnakeCase(judge);
+    const data = toSnakeCase(judge);
     const result = stmt.run(data);
     return { ...judge, id: Number(result.lastInsertRowid) };
   }
@@ -70,7 +70,7 @@ export class JudgeRepository {
           updated_at = @updatedAt
       WHERE id = @id
     `);
-    const data = DatabaseService.toSnakeCase(updated);
+    const data = toSnakeCase(updated);
     stmt.run(data);
     return updated;
   }

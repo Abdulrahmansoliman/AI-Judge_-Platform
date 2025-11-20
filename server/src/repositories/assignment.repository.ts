@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { DatabaseService } from '../services/database.service';
+import { DatabaseService, toCamelCase, toSnakeCase } from '../services/database.service';
 import { QuestionJudgeRow, QuestionJudge } from '../models/assignment.model';
 
 export class AssignmentRepository {
@@ -12,7 +12,7 @@ export class AssignmentRepository {
   findById(id: number): QuestionJudge | null {
     const stmt = this.db.prepare('SELECT * FROM question_judges WHERE id = ?');
     const row = stmt.get(id) as QuestionJudgeRow | undefined;
-    return row ? DatabaseService.toCamelCase(row) : null;
+    return row ? toCamelCase(row) : null;
   }
 
   findByQueueAndQuestion(queueId: string, questionId: string): QuestionJudge[] {
@@ -22,13 +22,13 @@ export class AssignmentRepository {
       ORDER BY created_at ASC
     `);
     const rows = stmt.all(queueId, questionId) as QuestionJudgeRow[];
-    return rows.map(row => DatabaseService.toCamelCase(row));
+    return rows.map(row => toCamelCase(row));
   }
 
   findByQueueId(queueId: string): QuestionJudge[] {
     const stmt = this.db.prepare('SELECT * FROM question_judges WHERE queue_id = ? ORDER BY created_at ASC');
     const rows = stmt.all(queueId) as QuestionJudgeRow[];
-    return rows.map(row => DatabaseService.toCamelCase(row));
+    return rows.map(row => toCamelCase(row));
   }
 
   findJudgeIdsByQuestion(queueId: string, questionId: string): number[] {
@@ -46,7 +46,7 @@ export class AssignmentRepository {
       INSERT INTO question_judges (queue_id, question_id, judge_id, created_at)
       VALUES (@queueId, @questionId, @judgeId, @createdAt)
     `);
-    const data = DatabaseService.toSnakeCase(assignment);
+    const data = toSnakeCase(assignment);
     const result = stmt.run(data);
     return { ...assignment, id: Number(result.lastInsertRowid) };
   }
@@ -66,7 +66,7 @@ export class AssignmentRepository {
 
         const now = Date.now();
         for (const judgeId of judgeIds) {
-          const data = DatabaseService.toSnakeCase({
+          const data = toSnakeCase({
             queueId,
             questionId,
             judgeId,

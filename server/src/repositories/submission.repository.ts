@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { DatabaseService } from '../services/database.service';
+import { DatabaseService, toCamelCase, toSnakeCase } from '../services/database.service';
 import { SubmissionRow, Submission } from '../models/submission.model';
 
 export class SubmissionRepository {
@@ -12,19 +12,19 @@ export class SubmissionRepository {
   findById(id: string): Submission | null {
     const stmt = this.db.prepare('SELECT * FROM submissions WHERE id = ?');
     const row = stmt.get(id) as SubmissionRow | undefined;
-    return row ? DatabaseService.toCamelCase(row) : null;
+    return row ? toCamelCase(row) : null;
   }
 
   findAll(): Submission[] {
     const stmt = this.db.prepare('SELECT * FROM submissions ORDER BY created_at DESC');
     const rows = stmt.all() as SubmissionRow[];
-    return rows.map(row => DatabaseService.toCamelCase(row));
+    return rows.map(row => toCamelCase(row));
   }
 
   findByQueueId(queueId: string): Submission[] {
     const stmt = this.db.prepare('SELECT * FROM submissions WHERE queue_id = ? ORDER BY created_at DESC');
     const rows = stmt.all(queueId) as SubmissionRow[];
-    return rows.map(row => DatabaseService.toCamelCase(row));
+    return rows.map(row => toCamelCase(row));
   }
 
   create(submission: Submission): Submission {
@@ -32,7 +32,7 @@ export class SubmissionRepository {
       INSERT INTO submissions (id, queue_id, labeling_task_id, created_at)
       VALUES (@id, @queueId, @labelingTaskId, @createdAt)
     `);
-    const data = DatabaseService.toSnakeCase(submission);
+    const data = toSnakeCase(submission);
     stmt.run(data);
     return submission;
   }
@@ -46,7 +46,7 @@ export class SubmissionRepository {
         labeling_task_id = excluded.labeling_task_id,
         created_at = excluded.created_at
     `);
-    const data = DatabaseService.toSnakeCase(submission);
+    const data = toSnakeCase(submission);
     stmt.run(data);
     return submission;
   }

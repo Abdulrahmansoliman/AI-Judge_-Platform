@@ -8,7 +8,7 @@ router.get('/evaluations', (req: Request, res: Response) => {
     const evaluationRepo = new EvaluationRepository();
     const judgeRepo = new JudgeRepository();
     const questionRepo = new QuestionRepository();
-    const { judgeIds, verdicts, submissionId } = req.query;
+    const { judgeIds, questionIds, verdicts, submissionId } = req.query;
 
     const filters: any = {};
 
@@ -18,6 +18,10 @@ router.get('/evaluations', (req: Request, res: Response) => {
 
     if (judgeIds && typeof judgeIds === 'string') {
       filters.judgeIds = judgeIds.split(',').map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+    }
+
+    if (questionIds && typeof questionIds === 'string') {
+      filters.questionIds = questionIds.split(',');
     }
 
     if (verdicts && typeof verdicts === 'string') {
@@ -45,8 +49,21 @@ router.get('/evaluations', (req: Request, res: Response) => {
       };
     });
 
+    const totalEvaluations = enrichedEvaluations.length;
+    const passedEvaluations = enrichedEvaluations.filter(e => e.verdict === 'pass').length;
+    const passRate = totalEvaluations > 0 
+      ? Math.round((passedEvaluations / totalEvaluations) * 100) 
+      : 0;
+
     res.json({
       evaluations: enrichedEvaluations,
+      statistics: {
+        total: totalEvaluations,
+        passed: passedEvaluations,
+        failed: enrichedEvaluations.filter(e => e.verdict === 'fail').length,
+        inconclusive: enrichedEvaluations.filter(e => e.verdict === 'inconclusive').length,
+        passRate: `${passRate}%`,
+      },
     });
   } catch (error) {
     console.error('Get evaluations error:', error);

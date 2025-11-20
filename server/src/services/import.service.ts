@@ -7,18 +7,23 @@ import {
 
 export interface SubmissionFromJson {
   id: string;
-  queue_id: string;
-  labeling_task_id: string;
-  created_at: number;
+  queueId: string;
+  labelingTaskId: string;
+  createdAt: number;
   questions: {
-    id: string;
-    question_text: string;
-    question_type: string;
     rev?: number;
-    choice?: string;
-    reasoning?: string;
-    raw_json?: any;
+    data: {
+      id: string;
+      questionType: string;
+      questionText: string;
+    };
   }[];
+  answers: {
+    [questionId: string]: {
+      choice?: string;
+      reasoning?: string;
+    };
+  };
 }
 
 export interface ImportResult {
@@ -47,32 +52,37 @@ export class ImportService {
       for (const submissionData of submissions) {
         this.submissionRepo.upsert({
           id: submissionData.id,
-          queueId: submissionData.queue_id,
-          labelingTaskId: submissionData.labeling_task_id,
-          createdAt: submissionData.created_at,
+          queueId: submissionData.queueId,
+          labelingTaskId: submissionData.labelingTaskId,
+          createdAt: submissionData.createdAt,
         });
         importedSubmissions++;
 
-        for (const questionData of submissionData.questions) {
+        for (const questionWrapper of submissionData.questions) {
+          const questionData = questionWrapper.data;
+          
           this.questionRepo.upsert({
             id: questionData.id,
-            queueId: submissionData.queue_id,
-            questionText: questionData.question_text,
-            questionType: questionData.question_type,
-            rev: questionData.rev,
-            createdAt: submissionData.created_at,
+            queueId: submissionData.queueId,
+            questionText: questionData.questionText,
+            questionType: questionData.questionType,
+            rev: questionWrapper.rev,
+            createdAt: submissionData.createdAt,
           });
           importedQuestions++;
 
-          this.answerRepo.create({
-            submissionId: submissionData.id,
-            questionId: questionData.id,
-            choice: questionData.choice || null,
-            reasoning: questionData.reasoning || null,
-            rawJson: questionData.raw_json ? JSON.stringify(questionData.raw_json) : JSON.stringify({}),
-            createdAt: submissionData.created_at,
-          });
-          importedAnswers++;
+          const answerData = submissionData.answers[questionData.id];
+          if (answerData) {
+            this.answerRepo.create({
+              submissionId: submissionData.id,
+              questionId: questionData.id,
+              choice: answerData.choice || null,
+              reasoning: answerData.reasoning || null,
+              rawJson: JSON.stringify(answerData),
+              createdAt: submissionData.createdAt,
+            });
+            importedAnswers++;
+          }
         }
       }
     });

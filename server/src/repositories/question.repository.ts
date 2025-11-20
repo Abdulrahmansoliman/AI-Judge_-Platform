@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { DatabaseService } from '../services/database.service';
+import { DatabaseService, toCamelCase, toSnakeCase } from '../services/database.service';
 import { QuestionRow, Question } from '../models/question.model';
 
 export class QuestionRepository {
@@ -12,19 +12,19 @@ export class QuestionRepository {
   findById(id: string, queueId: string): Question | null {
     const stmt = this.db.prepare('SELECT * FROM questions WHERE id = ? AND queue_id = ?');
     const row = stmt.get(id, queueId) as QuestionRow | undefined;
-    return row ? DatabaseService.toCamelCase(row) : null;
+    return row ? toCamelCase(row) : null;
   }
 
   findByQueueId(queueId: string): Question[] {
     const stmt = this.db.prepare('SELECT * FROM questions WHERE queue_id = ? ORDER BY created_at ASC');
     const rows = stmt.all(queueId) as QuestionRow[];
-    return rows.map(row => DatabaseService.toCamelCase(row));
+    return rows.map(row => toCamelCase(row));
   }
 
   findAll(): Question[] {
     const stmt = this.db.prepare('SELECT * FROM questions ORDER BY created_at DESC');
     const rows = stmt.all() as QuestionRow[];
-    return rows.map(row => DatabaseService.toCamelCase(row));
+    return rows.map(row => toCamelCase(row));
   }
 
   create(question: Question): Question {
@@ -32,7 +32,7 @@ export class QuestionRepository {
       INSERT INTO questions (id, queue_id, question_text, question_type, rev, created_at)
       VALUES (@id, @queueId, @questionText, @questionType, @rev, @createdAt)
     `);
-    const data = DatabaseService.toSnakeCase(question);
+    const data = toSnakeCase(question);
     stmt.run(data);
     return question;
   }
@@ -47,7 +47,7 @@ export class QuestionRepository {
         rev = excluded.rev,
         created_at = excluded.created_at
     `);
-    const data = DatabaseService.toSnakeCase(question);
+    const data = toSnakeCase(question);
     stmt.run(data);
     return question;
   }

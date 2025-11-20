@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { DatabaseService } from '../services/database.service';
+import { DatabaseService, toCamelCase, toSnakeCase } from '../services/database.service';
 import { EvaluationRow, Evaluation, CreateEvaluationInput } from '../models/evaluation.model';
 
 export class EvaluationRepository {
@@ -12,23 +12,24 @@ export class EvaluationRepository {
   findById(id: number): Evaluation | null {
     const stmt = this.db.prepare('SELECT * FROM evaluations WHERE id = ?');
     const row = stmt.get(id) as EvaluationRow | undefined;
-    return row ? DatabaseService.toCamelCase(row) : null;
+    return row ? toCamelCase(row) : null;
   }
 
   findAll(): Evaluation[] {
     const stmt = this.db.prepare('SELECT * FROM evaluations ORDER BY created_at DESC');
     const rows = stmt.all() as EvaluationRow[];
-    return rows.map(row => DatabaseService.toCamelCase(row));
+    return rows.map(row => toCamelCase(row));
   }
 
   findBySubmissionId(submissionId: string): Evaluation[] {
     const stmt = this.db.prepare('SELECT * FROM evaluations WHERE submission_id = ? ORDER BY created_at ASC');
     const rows = stmt.all(submissionId) as EvaluationRow[];
-    return rows.map(row => DatabaseService.toCamelCase(row));
+    return rows.map(row => toCamelCase(row));
   }
 
   findByFilters(filters: {
     judgeIds?: number[];
+    questionIds?: string[];
     verdicts?: string[];
     submissionId?: string;
   }): Evaluation[] {
@@ -45,6 +46,11 @@ export class EvaluationRepository {
       params.push(...filters.judgeIds);
     }
 
+    if (filters.questionIds && filters.questionIds.length > 0) {
+      query += ` AND question_id IN (${filters.questionIds.map(() => '?').join(',')})`;
+      params.push(...filters.questionIds);
+    }
+
     if (filters.verdicts && filters.verdicts.length > 0) {
       query += ` AND verdict IN (${filters.verdicts.map(() => '?').join(',')})`;
       params.push(...filters.verdicts);
@@ -54,7 +60,7 @@ export class EvaluationRepository {
 
     const stmt = this.db.prepare(query);
     const rows = stmt.all(...params) as EvaluationRow[];
-    return rows.map(row => DatabaseService.toCamelCase(row));
+    return rows.map(row => toCamelCase(row));
   }
 
   findExisting(submissionId: string, questionId: string, judgeId: number): Evaluation | null {
@@ -63,7 +69,7 @@ export class EvaluationRepository {
       WHERE submission_id = ? AND question_id = ? AND judge_id = ?
     `);
     const row = stmt.get(submissionId, questionId, judgeId) as EvaluationRow | undefined;
-    return row ? DatabaseService.toCamelCase(row) : null;
+    return row ? toCamelCase(row) : null;
   }
 
   create(input: CreateEvaluationInput): Evaluation {
@@ -76,7 +82,7 @@ export class EvaluationRepository {
       INSERT INTO evaluations (submission_id, question_id, judge_id, verdict, reasoning, raw_response, created_at)
       VALUES (@submissionId, @questionId, @judgeId, @verdict, @reasoning, @rawResponse, @createdAt)
     `);
-    const data = DatabaseService.toSnakeCase(evaluation);
+    const data = toSnakeCase(evaluation);
     const result = stmt.run(data);
     return { ...evaluation, id: Number(result.lastInsertRowid) };
   }
@@ -96,7 +102,7 @@ export class EvaluationRepository {
         raw_response = excluded.raw_response,
         created_at = excluded.created_at
     `);
-    const data = DatabaseService.toSnakeCase(evaluation);
+    const data = toSnakeCase(evaluation);
     const result = stmt.run(data);
     
     const existing = this.findExisting(input.submissionId, input.questionId, input.judgeId);
