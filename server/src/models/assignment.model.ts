@@ -6,6 +6,8 @@ export interface QuestionJudgeAssignment {
   createdAt: number;
 }
 
+export type QuestionJudge = QuestionJudgeAssignment;
+
 export interface CreateAssignmentInput {
   queueId: string;
   questionId: string;
@@ -25,3 +27,5 @@ export interface AssignmentRow {
   judge_id: number;
   created_at: number;
 }
+
+export type QuestionJudgeRow = AssignmentRow;
